@@ -1,0 +1,18 @@
+FROM gcc:13.2 AS builder
+
+WORKDIR /build
+
+# Clone and compile the official Befunge-93 interpreter from catseye
+RUN apt-get update && apt-get install -y git && \
+    git clone https://github.com/catseye/Befunge-93.git && \
+    cd Befunge-93 && \
+    gcc -o befunge src/bef.c
+
+FROM debian:bookworm-slim
+
+COPY --from=builder /build/Befunge-93/befunge /usr/local/bin/befunge
+
+WORKDIR /app
+
+
+# l'image sets up l'environment pour Befunge
