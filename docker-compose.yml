@@ -16,6 +16,11 @@ services:
       CASC_JENKINS_CONFIG: "/var/jenkins_home/casc_configs"
       ADMIN_PASSWORD: "admin"
       IMAGE: "/opt/jenkins/image"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 15s
+      timeout: 10s
+      retries: 3
     entrypoint:
       - "/usr/bin/tini"
       - "--"
