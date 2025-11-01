@@ -2,18 +2,18 @@ FROM maven:3.9-eclipse-temurin-21 AS builder
 
 WORKDIR /app
 
-COPY app/pom.xml ./app/
+COPY app/pom.xml app/pom.xml
 
-RUN mvn -f ./app/pom.xml dependency:go-offline -B
+RUN cd app && mvn dependency:go-offline -B
 
-COPY app ./app
+COPY app app
 
-RUN mvn -f ./app/pom.xml package -DskipTests
+RUN cd app && mvn package -DskipTests
 
 FROM eclipse-temurin:21-jre
 
 WORKDIR /app
 
-COPY --from=builder /app/target/app.jar .
+COPY --from=builder /app/app/target/app.jar .
 
 CMD ["java", "-jar", "app.jar"]
