@@ -11,7 +11,9 @@ services:
       - jenkins-whanos-data:/var/jenkins_home
       - ./jenkins/casc.yml:/var/jenkins_home/casc_configs/casc.yaml:ro
       - ./jenkins/job_dsl.groovy:/opt/jenkins/job_dsl.groovy:ro
-      - ./image:/opt/jenkins/image:ro
+      - ./jenkins/scripts/deploy.sh:/opt/jenkins/deploy.sh:ro
+      - ./images:/opt/jenkins/images:ro
+      - /var/run/docker.sock:/var/run/docker.sock
     environment:
       CASC_JENKINS_CONFIG: "/var/jenkins_home/casc_configs"
       ADMIN_PASSWORD: "admin"
@@ -21,5 +23,29 @@ services:
       - "--"
       - "/usr/local/bin/jenkins.sh"
 
+  registry:
+    image: registry:2
+    container_name: whanos-registry
+    ports:
+      - "5000:5000"
+    restart: unless-stopped
+    volumes:
+      - registry-data:/var/lib/registry
+      - ./registry/config.yml:/etc/docker/registry/config.yml:ro
+
+  registry-ui:
+    image: joxit/docker-registry-ui:latest
+    container_name: whanos-registry-ui
+    restart: unless-stopped
+    ports:
+      - "8081:80"
+    environment:
+      - REGISTRY_TITLE=Whanos Registry
+      - REGISTRY_URL=http://localhost:5000
+      - DELETE_IMAGES=true
+    depends_on:
+      - registry
+
 volumes:
   jenkins-whanos-data: {}
+  registry-data: {}

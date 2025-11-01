@@ -1,0 +1,37 @@
+version: 0.1
+
+log:
+  level: info
+
+http:
+  addr: :5000
+  headers:
+    Access-Control-Allow-Origin:
+      - "*"
+    Access-Control-Allow-Methods:
+      - "GET"
+      - "HEAD"
+      - "DELETE"
+      - "PUT"
+      - "POST"
+    Access-Control-Allow-Headers:
+      - "Authorization"
+      - "Content-Type"
+      - "Accept"
+      - "Origin"
+      - "User-Agent"
+      - "DNT"
+      - "Cache-Control"
+      - "X-Mx-ReqToken"
+      - "Keep-Alive"
+      - "X-Requested-With"
+      - "If-Modified-Since"
+      - "X-CSRF-Token"
+
+storage:
+  filesystem:
+    rootdirectory: /var/lib/registry
+
+health:
+  storagedriver:
+    enabled: true
