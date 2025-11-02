@@ -139,9 +139,9 @@ if [ "$NO_BUILD" = false ]; then
   build_image "$ROOT" "$IMAGE"
 fi
 
-if [ "$NO_PUSH" = false ]; then
+# if [ "$NO_PUSH" = false ]; then
   # push_image "$IMAGE"
-fi
+# fi
 
 if [ "$NO_DEPLOY" = false ]; then
   deploy "$IMAGE" "$ROOT"
