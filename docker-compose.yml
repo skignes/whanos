@@ -43,7 +43,7 @@ services:
       - "8081:80"
     environment:
       - REGISTRY_TITLE=Whanos Registry
-      - REGISTRY_URL=http://localhost:5000
+      - REGISTRY_URL=http://192.168.0.56:5000
       - DELETE_IMAGES=true
     depends_on:
       - registry
