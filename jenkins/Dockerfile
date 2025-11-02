@@ -14,11 +14,29 @@ RUN apt-get update && \
     docker.io &&                    \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Install kubectl and helm
-RUN curl -LO https://dl.k8s.io/release/v1.34.0/bin/linux/amd64/kubectl && \
-    install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+ARG TARGETARCH
+RUN set -eux; \
+    if [ -n "${TARGETARCH:-}" ]; then \
+        KUB_ARCH=${TARGETARCH}; \
+    else \
+        case "$(uname -m)" in \
+            x86_64) KUB_ARCH=amd64 ;; \
+            aarch64|arm64) KUB_ARCH=arm64 ;; \
+            armv7l) KUB_ARCH=arm ;; \
+            i386|i686) KUB_ARCH=386 ;; \
+            ppc64le) KUB_ARCH=ppc64le ;; \
+            s390x) KUB_ARCH=s390x ;; \
+            *) echo "Unsupported architecture: $(uname -m)" >&2; exit 1 ;; \
+        esac; \
+    fi; \
+    echo "Installing kubectl for arch=${KUB_ARCH}"; \
+    KUB_VERSION="v1.34.0"; \
+    KUB_URL="https://dl.k8s.io/release/${KUB_VERSION}/bin/linux/${KUB_ARCH}/kubectl"; \
+    curl -fsSLo /tmp/kubectl "$KUB_URL"; \
+    install -o root -g root -m 0755 /tmp/kubectl /usr/local/bin/kubectl; \
+    rm -f /tmp/kubectl
 
-RUN curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+RUN curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
 
 RUN groupadd -g ${DOCKER_GID} docker_${DOCKER_GID}
 RUN usermod -aG docker_${DOCKER_GID} jenkins
