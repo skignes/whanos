@@ -4,7 +4,7 @@ set -euo pipefail
 ROOT="${4:-.}"
 NO_BUILD=false
 NO_PUSH=false
-NO_DEPLOY=true
+NO_DEPLOY=false
 
 usage(){
     cat <<EOF
@@ -74,7 +74,7 @@ build_image(){
   local d_standalone="$REPO_ROOT_DIR/images/${LANGUAGE}/Dockerfile.standalone"
 
   if [ -f "$d_standalone" ]; then
-    log "Info: Buildingn using Whanos image Dockerfile: $d_standalone"
+    log "Info: Building using Whanos image Dockerfile: $d_standalone"
     docker build -t "$image" -f "$d_standalone" "$dir"
     return
   fi
@@ -88,6 +88,32 @@ push_image(){
 
   log "Info: Pushing image $image"
   docker push "$image"
+}
+
+deploy(){
+  local image="$1" repo_root="$2"
+
+  log "Info: Checking for whanos.yml"
+
+  local yml="$repo_root/whanos.yml"
+
+  if [ ! -f "$yml" ]; then
+    log "Info: no whanos.yml — skipping deploy"
+    return 0
+  fi
+
+  if ! command -v helm >/dev/null 2>&1; then
+    log "Error: helm command not found"
+    return 1
+  fi
+
+  local chart_dir="/opt/jenkins/helm"
+
+  log "Info: Rendering Helm template and applying to cluster"
+  if ! helm template "$APP_NAME" "$chart_dir" -f "$yml" | kubectl apply -f -; then
+    log "Error: helm template | kubectl apply failed"
+    return 1
+  fi
 }
 
 # Build -> Push -> Deploy

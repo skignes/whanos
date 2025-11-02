@@ -10,8 +10,15 @@ RUN apt-get update && \
     zsh build-essential curl        \
     apt-transport-https net-tools   \
     ca-certificates                 \
+    gnupg lsb-release               \
     docker.io &&                    \
-    apt-get clean
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Install kubectl and helm
+RUN curl -LO https://dl.k8s.io/release/v1.34.0/bin/linux/amd64/kubectl && \
+    install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+
+RUN curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
 
 RUN groupadd -g ${DOCKER_GID} docker_${DOCKER_GID}
 RUN usermod -aG docker_${DOCKER_GID} jenkins

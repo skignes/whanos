@@ -62,8 +62,8 @@ if [ ! -f /opt/jenkins/images/${lang.id}/Dockerfile.base ]; then
 fi
 
 docker build -t ${lang.name}:latest - < /opt/jenkins/images/${lang.id}/Dockerfile.base
-docker tag ${lang.name}:latest 127.0.0.1:5000/${lang.name}:latest
-docker push 127.0.0.1:5000/${lang.name}:latest
+docker tag ${lang.name}:latest 192.168.0.56:5000/${lang.name}:latest
+docker push 192.168.0.56:5000/${lang.name}:latest
 """)
                 }
                 wrappers { timestamps() }
@@ -90,23 +90,23 @@ pipelineJob('Whanos base images/Build all base images') {
             def instance = Jenkins.instance.getItemByFullName(jobFullName)
 
             if (instance == null) {
-                error("Job ${jobFullName} not found")
+                throw new hudson.AbortException("Job ${jobFullName} not found")
             }
 
             def build = instance.scheduleBuild2(0)
 
             if (build == null) {
-                error("Failed to schedule ${jobFullName}")
+                throw new hudson.AbortException("Failed to schedule ${jobFullName}")
             }
 
             def finished_build = build.get()
             if (finished_build == null) {
-                error("Failed to get build for ${jobFullName}")
+                throw new hudson.AbortException("Failed to get build for ${jobFullName}")
             }
 
             def result = finished_build.getResult()
             if (result == null || result.toString() != 'SUCCESS') {
-                error("${jobFullName} finished with status: ${result}")
+                throw new hudson.AbortException("${jobFullName} finished with status: ${result}")
             }
         }
     }

@@ -1,0 +1,11 @@
+---
+apiVersion: v2
+name: whanos-chart
+description: A helm chart for kube
+maintainers:
+  - name: skignes
+sources:
+  - https://github.com/skignes/Whanos
+type: application
+version: 0.1.0
+appVersion: "0.1"

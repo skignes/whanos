@@ -1,0 +1,56 @@
+---
+{{- $release := .Release.Name -}}
+{{- $vals := .Values -}}
+{{- $resources := $vals.deployment.resources -}}
+{{- $ports := $vals.deployment.ports -}}
+{{- $replicas := default 1 $vals.deployment.replicas -}}
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $release }}-deploy
+  annotations:
+    rollme: {{ randAlphaNum 5 | quote }}
+spec:
+  replicas: {{ $replicas }}
+  selector:
+    matchLabels:
+      app: {{ $release }}
+  template:
+    metadata:
+      labels:
+        app: {{ $release }}
+      annotations:
+        rollme: {{ randAlphaNum 5 | quote }}
+    spec:
+      containers:
+      - name: {{ $vals.image.name }}
+        image: {{ $vals.image.repository }}:{{ $vals.image.tag }}
+        {{- if $resources }}
+        resources: {{ $resources | toJson }}
+        {{- end }}
+        {{- if $ports }}
+        ports:
+          {{- range $ports }}
+          - containerPort: {{ . }}
+          {{- end }}
+        {{- end }}
+
+{{- if $ports }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $release }}-loadbalance
+spec:
+  ports:
+    {{- range $ports }}
+    - targetPort: {{ . }}
+      protocol: TCP
+      port: {{ . }}
+      name: {{ . | quote }}
+    {{- end }}
+  selector:
+    app: {{ $release }}
+{{- end }}
