@@ -60,22 +60,39 @@ log "Detected language: $LANGUAGE"
 
 REPO_ROOT_DIR="/opt/jenkins/"
 APP_NAME=$(basename "$ROOT")
-IMAGE="127.0.0.1:5000/${APP_NAME}:latest"
+IMAGE="platypouce.fr/${APP_NAME}:latest"
 
 build_image(){
   local dir="$1" image="$2"
+  arch="$(uname -m)"
+  case "$arch" in
+    x86_64) PLATFORM="linux/amd64" ;;
+    aarch64|arm64) PLATFORM="linux/arm64" ;;
+    armv7l) PLATFORM="linux/arm/v7" ;;
+    i386|i686) PLATFORM="linux/386" ;;
+    *) PLATFORM="" ;;
+  esac
 
   if [ -f "$dir/Dockerfile" ]; then
-    log "Info: Building from provided Dockerfile"
-    docker build -t "$image" -f "$dir/Dockerfile" "$dir"
+    log "Info: Building from provided Dockerfile (platform=${PLATFORM:-default})"
+    if [ -n "$PLATFORM" ]; then
+      docker build --platform "$PLATFORM" -t "$image" -f "$dir/Dockerfile" "$dir"
+    else
+      docker build -t "$image" -f "$dir/Dockerfile" "$dir"
+    fi
     return
   fi
 
   local d_standalone="$REPO_ROOT_DIR/images/${LANGUAGE}/Dockerfile.standalone"
 
   if [ -f "$d_standalone" ]; then
-    log "Info: Building using Whanos image Dockerfile: $d_standalone"
-    docker build -t "$image" -f "$d_standalone" "$dir"
+    log "Info: Building using Whanos image Dockerfile: $d_standalone (platform=${PLATFORM:-default})"
+    docker buildx create --use --name whanos-builder || docker buildx use whanos-builder
+    if [ -n "$PLATFORM" ]; then
+      docker buildx build --platform "$PLATFORM" -t "$image" -f "$d_standalone" "$dir" --push
+    else
+      docker buildx build -t "$image" -f "$d_standalone" "$dir" --push
+    fi
     return
   fi
 
@@ -123,7 +140,7 @@ if [ "$NO_BUILD" = false ]; then
 fi
 
 if [ "$NO_PUSH" = false ]; then
-  push_image "$IMAGE"
+  # push_image "$IMAGE"
 fi
 
 if [ "$NO_DEPLOY" = false ]; then
