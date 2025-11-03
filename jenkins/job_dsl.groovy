@@ -62,8 +62,8 @@ if [ ! -f /opt/jenkins/images/${lang.id}/Dockerfile.base ]; then
 fi
 
 docker build -t ${lang.name}:latest - < /opt/jenkins/images/${lang.id}/Dockerfile.base
-docker tag ${lang.name}:latest 192.168.0.56:5000/${lang.name}:latest
-docker push 192.168.0.56:5000/${lang.name}:latest
+docker tag ${lang.name}:latest www.skignes.fr/${lang.name}:latest
+docker push www.skignes.fr/${lang.name}:latest
 """)
                 }
                 wrappers { timestamps() }

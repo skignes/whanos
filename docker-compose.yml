@@ -29,7 +29,7 @@ services:
     image: registry:2
     container_name: whanos-registry
     ports:
-      - "5000:5000"
+      - "3001:5000"
     restart: unless-stopped
     volumes:
       - registry-data:/var/lib/registry
@@ -40,10 +40,10 @@ services:
     container_name: whanos-registry-ui
     restart: unless-stopped
     ports:
-      - "8081:80"
+      - "3000:80"
     environment:
       - REGISTRY_TITLE=Whanos Registry
-      - REGISTRY_URL=http://192.168.0.56:5000
+      - REGISTRY_URL=http://www.skignes.fr
       - DELETE_IMAGES=true
     depends_on:
       - registry

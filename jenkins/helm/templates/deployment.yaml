@@ -4,6 +4,10 @@
 {{- $resources := $vals.deployment.resources -}}
 {{- $ports := $vals.deployment.ports -}}
 {{- $replicas := default 1 $vals.deployment.replicas -}}
+{{- $img := $vals.image -}}
+{{- $imageName := $img.name -}}
+{{- $imageRepo := $img.repository -}}
+{{- $imageTag := default "latest" $img.tag -}}
 ---
 
 apiVersion: apps/v1
@@ -25,8 +29,8 @@ spec:
         rollme: {{ randAlphaNum 5 | quote }}
     spec:
       containers:
-      - name: {{ $vals.image.name }}
-        image: {{ $vals.image.repository }}:{{ $vals.image.tag }}
+      - name: {{ $imageName }}
+        image: {{ $imageRepo }}:{{ $imageTag }}
         {{- if $resources }}
         resources: {{ $resources | toJson }}
         {{- end }}
@@ -44,6 +48,7 @@ kind: Service
 metadata:
   name: {{ $release }}-loadbalance
 spec:
+  type: LoadBalancer
   ports:
     {{- range $ports }}
     - targetPort: {{ . }}

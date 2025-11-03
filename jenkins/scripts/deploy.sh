@@ -60,7 +60,7 @@ log "Detected language: $LANGUAGE"
 
 REPO_ROOT_DIR="/opt/jenkins/"
 APP_NAME=$(basename "$ROOT")
-IMAGE="platypouce.fr/${APP_NAME}:latest"
+IMAGE="www.skignes.fr/${APP_NAME}:latest"
 
 build_image(){
   local dir="$1" image="$2"
@@ -87,12 +87,7 @@ build_image(){
 
   if [ -f "$d_standalone" ]; then
     log "Info: Building using Whanos image Dockerfile: $d_standalone (platform=${PLATFORM:-default})"
-    docker buildx create --use --name whanos-builder || docker buildx use whanos-builder
-    if [ -n "$PLATFORM" ]; then
-      docker buildx build --platform "$PLATFORM" -t "$image" -f "$d_standalone" "$dir" --push
-    else
-      docker buildx build -t "$image" -f "$d_standalone" "$dir" --push
-    fi
+    docker build -t "$image" -f "$d_standalone" "$dir"
     return
   fi
 
@@ -127,7 +122,12 @@ deploy(){
   local chart_dir="/opt/jenkins/helm"
 
   log "Info: Rendering Helm template and applying to cluster"
-  if ! helm template "$APP_NAME" "$chart_dir" -f "$yml" | kubectl apply -f -; then
+
+  local repo_only
+
+  repo_only="${image%%:*}"
+  log "Info: Forcing image values: repository=${repo_only}, tag=latest, name=${APP_NAME}"
+  if ! helm template "$APP_NAME" "$chart_dir" -f "$yml" --set image.repository="${repo_only}" --set image.tag="latest" --set image.name="${APP_NAME}" | kubectl apply -f -; then
     log "Error: helm template | kubectl apply failed"
     return 1
   fi
@@ -139,9 +139,9 @@ if [ "$NO_BUILD" = false ]; then
   build_image "$ROOT" "$IMAGE"
 fi
 
-# if [ "$NO_PUSH" = false ]; then
-  # push_image "$IMAGE"
-# fi
+if [ "$NO_PUSH" = false ]; then
+  push_image "$IMAGE"
+fi
 
 if [ "$NO_DEPLOY" = false ]; then
   deploy "$IMAGE" "$ROOT"
